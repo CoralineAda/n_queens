@@ -100,7 +100,7 @@ class Queen
     return unless self.threatened? || force
     if optimal = self.optimal_move
       self.move_to(optimal)
-    elsif self.board.threatened_queens.count == 10 || force
+    elsif self.board.threatened_queens.count == self.board.size || force
       self.move_to_random_square
     else
       return
@@ -109,13 +109,11 @@ class Queen
 
   def move_to(coords)
     self.coords = coords
-    return self.board
   end
 
   def move_to_random_square
     destinations = allowable_squares
-    self.coords = destinations[rand(destinations.count)]
-    return self.board
+    move_to(destinations[rand(destinations.count)])
   end
 
   def optimal_move
@@ -123,12 +121,12 @@ class Queen
       optimal = []
       original_x = self.x
       original_y = self.y
-      prev_threatened = self.board.threatened_queens.count
+      prev_threats = self.threats
       self.allowable_squares.each do |coords|
         self.move_to(coords)
-        threatened = self.board.threatened_queens.count
-        if threatened <= prev_threatened
-          optimal << Move.new([coords[0], coords[1]], threatened)
+        current_threats = self.threats
+        if current_threats < prev_threats
+          optimal << Move.new([coords[0], coords[1]], current_threats)
         end
         self.move_to([original_x, original_y])
       end
@@ -156,11 +154,12 @@ class Queen
     squares - [[self.x, self.y]]
   end
 
+  def threats
+    self.possible_squares.inject(0){ |s, coords| s += self.board.queens.select{|q| q.coords == coords}.count}
+  end
+
   def threatened?
-    self.possible_squares.each do |coords|
-      return true if self.board.queens.select{|q| q.coords == coords}.count > 0
-    end
-    false
+    self.threats > 0
   end
 
   def x

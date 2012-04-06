@@ -24,11 +24,16 @@ class Board
   end
 
   def move_queens(force=false)
-    self.queens.each{|q| q.move(force)}
-    threatened = self.threatened_queens
-    if ! threatened.empty? && force
-      threatened.each{|q| q.move(force && rand(2) == 1)}
+    if force
+      threatened = self.threatened_queens
+      threatened[rand(threatened.count)].move(force)
+    else
+      self.queens.each_with_index{|q,i| q.move(true) if i % self.size / 2 == 1}
     end
+  end
+
+  def occupied_squares
+    self.queens.map{|q| q.coords}
   end
 
   def reset
@@ -50,12 +55,16 @@ class Board
     self.queens.select{|q| q.threatened?}
   end
 
+  def threatened_squares
+    self.queens.map{|q| q.possible_squares}.uniq
+  end
+
   def to_s
     grid = "\n"
     (0..self.size - 1).each do |y|
       row = ""
       (0..self.size - 1).each do |x|
-        square = self.queens.select{|q| q.coords == [x, y]}.empty? ? " . " : " Q "
+        square = self.queens.select{|q| q.coords == [x, y]}.empty? ? " . " : "(+)"
         row << square
       end
       grid << row << "\n"

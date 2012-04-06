@@ -12,7 +12,7 @@ class Solver
 
   def create_permutation
     clone = self.board.clone
-    clone.move_queens
+    clone.move_queens(true)
     clone
   end
 
@@ -30,12 +30,13 @@ class Solver
     if force_move || self.board.initial_state
       self.board.move_queens(true)
     else
-      (10 - prev_threatened_queens).times{mutants << create_permutation}
+      prev_threatened_queens.times{mutants << create_permutation}
       mutants = mutants - self.permutations
       sorted = mutants.sort{|a,b| a.threatened_queens.count <=> b.threatened_queens.count}
-      optimal = sorted.select{|b| b.threatened_queens.count == sorted.min{|b| b.threatened_queens.count}}
-      selection = optimal[rand(optimal.count)]
-      if selection && selection.threatened_queens.count <= prev_threatened_queens
+      best = sorted.empty? ? [] : sorted.min{|b| b.threatened_queens.count}.threatened_queens.count
+      optimal = sorted.select{|b| b.threatened_queens.count == best }
+      selection = optimal.first
+      if selection && selection.threatened_queens.count < prev_threatened_queens
         self.board = selection
       else
         self.board.move_queens(true)
